@@ -166,17 +166,12 @@ for seed in tqdm(SEEDS, desc="🔄 Processing seeds"):
                 model = XGBRegressor(**params)
                 model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], verbose=False)
                 return mean_absolute_percentage_error(y_valid, model.predict(X_valid))
-            
-            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna CatBoost"):
-                optuna.create_study(direction="minimize").optimize(cb_objective, n_trials=1, show_progress_bar=False)
-            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna LGBM"):
-                optuna.create_study(direction="minimize").optimize(lgbm_objective, n_trials=1, show_progress_bar=False)
-            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna XGB"):
-                optuna.create_study(direction="minimize").optimize(xgb_objective, n_trials=1, show_progress_bar=False)
 
             # train best CatBoost for ensembling comparison
             study_cb = optuna.create_study(direction="minimize")
-            study_cb.optimize(cb_objective, n_trials=N_TRIALS_BASE_MODELS)
+            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna CatBoost"):
+                study_cb.optimize(cb_objective, n_trials=1, show_progress_bar=False)
+
             model_cb = CatBoostRegressor(**study_cb.best_params, loss_function='MAE', verbose=0)
             model_cb.fit(X_train, y_train, eval_set=Pool(X_valid, y_valid), early_stopping_rounds=50)
             oof_cb.append(model_cb.predict(X_valid))
@@ -184,7 +179,9 @@ for seed in tqdm(SEEDS, desc="🔄 Processing seeds"):
 
             # train best LGBM for ensembling comparison
             study_lgbm = optuna.create_study(direction="minimize")
-            study_lgbm.optimize(lgbm_objective, n_trials=N_TRIALS_BASE_MODELS)
+            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna LGBM"):
+                study_lgbm.optimize(lgbm_objective, n_trials=1, show_progress_bar=False)
+
             model_lgbm = LGBMRegressor(**study_lgbm.best_params, random_state=seed, metric='mape', verbosity=-1)
             model_lgbm.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], callbacks=[early_stopping(50)])
             oof_lgbm.append(model_lgbm.predict(X_valid))
@@ -192,7 +189,9 @@ for seed in tqdm(SEEDS, desc="🔄 Processing seeds"):
 
             # train best XGB for ensembling comparison
             study_xgb = optuna.create_study(direction="minimize")
-            study_xgb.optimize(xgb_objective, n_trials=N_TRIALS_BASE_MODELS)
+            for _ in tqdm(range(N_TRIALS_BASE_MODELS), desc="🔧 Optuna XGB"):
+                study_xgb.optimize(xgb_objective, n_trials=1, show_progress_bar=False)
+
             model_xgb = XGBRegressor(**study_xgb.best_params)
             model_xgb.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], verbose=False)
             oof_xgb.append(model_xgb.predict(X_valid))
@@ -217,12 +216,10 @@ for seed in tqdm(SEEDS, desc="🔄 Processing seeds"):
             preds = ridge.predict(X_stack)
             return mean_absolute_percentage_error(oof_y, preds)
         
-        for _ in tqdm(range(N_TRIALS_BLEND), desc="⚙️ Optuna Ridge Blend"):
-            optuna.create_study(direction="minimize").optimize(blend_objective, n_trials=1, show_progress_bar=False)
-
         # Optimize blending weights using Optuna
         study_blend = optuna.create_study(direction="minimize")
-        study_blend.optimize(blend_objective, n_trials=N_TRIALS_BLEND)
+        for _ in tqdm(range(N_TRIALS_BLEND), desc="⚙️ Optuna Ridge Blend"):
+            study_blend.optimize(blend_objective, n_trials=1, show_progress_bar=False)
 
         best_params = study_blend.best_params
         w_cb = best_params['w_cb']
