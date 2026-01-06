@@ -8,7 +8,7 @@ from src.engineer import engineer_features
 
 
 app = FastAPI()
-MODEL = joblib.load("models/best_model.pkl")
+MODEL = joblib.load("models/model.pkl")
 SCALER = joblib.load("models/scaler.pkl")
 MEDIANS = joblib.load("models/medians.pkl")
 
