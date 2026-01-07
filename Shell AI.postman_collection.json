@@ -1,0 +1,41 @@
+{
+	"info": {
+		"_postman_id": "a8824238-c7f9-48d6-9bea-9fec716eea38",
+		"name": "Shell AI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21883167"
+	},
+	"item": [
+		{
+			"name": "Predict",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/ngota/OneDrive/Desktop/Github/Shell.ai-Hackathon-2025/data/test.csv"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://18.220.74.80/predict",
+					"protocol": "http",
+					"host": [
+						"18",
+						"220",
+						"74",
+						"80"
+					],
+					"path": [
+						"predict"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
