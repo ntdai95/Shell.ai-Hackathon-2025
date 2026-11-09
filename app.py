@@ -17,9 +17,9 @@ MEDIANS = joblib.load("models/medians.pkl")
 async def predict_to_csv(file: UploadFile = File(...)):
     df = pd.read_csv(io.BytesIO(await file.read()))
     if 'ID' in df.columns:
-        ids = df['ID'] 
+        ids = df['ID'].reset_index(drop=True)
     else:
-        range(len(df))
+        ids = pd.RangeIndex(start=0, stop=len(df), name='ID')
     
     X = engineer_features(df.drop(columns=['ID'], errors='ignore'))
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
